@@ -8,5 +8,6 @@ Related files
 * `di.com` : resulting binary created by SjASMPlus
 
 Changes:
+* Compatibility fix for Nextor 3
 * Reverse engineered the print speed improvements from v0.20
 * Added `/W` switch for `dir/w` like output (dirs first and sorted alphabetically)
