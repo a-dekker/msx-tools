@@ -1,4 +1,4 @@
-;*** DI DIR with LFN v0.21
+;*** DI DIR with LFN v0.22
 ;
 
 ;
@@ -47,7 +47,7 @@ START:
 NEXTOR_TXT: db  "Only for MSX Nextor!!",CR,LF,"$"
 all_string: db  "*.*",0
 HlpMes:
-  db  "DI.COM v0.21 by Victor Martinez",CR,LF
+  db  "DI.COM v0.22 by Victor Martinez",CR,LF
   db  "DIR that shows Long File Name",CR,LF
   db  "Only for Nextor by Konamiman",CR,LF,CR,LF
 
@@ -334,7 +334,7 @@ no_PUT_DIRECTORY:
   ;HL:pointer to 32 bits number
   ;BC:pointer to output buffer
   ld  hl,line_file_2_PRINT+27
-  ld  (hl),"$"
+  ld  (hl),0	;end of the line (a file name can contain "$")
 
 check_LFN:
   ;check if screen width is greater than 35
@@ -351,7 +351,7 @@ check_LFN:
 long_LFN_to_write:  ld  bc,80-27
   ldir
   ex  de,hl
-  ld  (hl),"$"
+  ld  (hl),0	;end of the line (a file name can contain "$")
 
 
 
@@ -359,14 +359,7 @@ end_print_line:
   ld  a,(fast_screen_ok)
   or  a
   jp  nz,fast_print_line  ;40/80 column screen: write straight to VRAM
-  ld  de,line_file_2_PRINT
-  ld  c,09
-  call  BDOS
-  ld  de,end_1RET_TXT
-  ld  c,09
-  call  BDOS
-
-  ret
+  jp  print_line_BDOS
 
 ;-----------------------------------------------------------------------------------
 ; Fast screen output
@@ -430,7 +423,7 @@ fast_row_top:
   ld  hl,line_file_2_PRINT
 fast_vram_loop:
   ld  a,(hl)
-  cp  "$"
+  or  a		;end of the line (0, not "$": a file name can contain "$")
   jr  z,fast_vram_done
   outi
   jr  fast_vram_loop
@@ -462,7 +455,7 @@ fast_mirror_nc:
   ld  hl,line_file_2_PRINT
 fast_mirror_copy:
   ld  a,(hl)
-  cp  "$"
+  or  a		;end of the line (0, not "$": a file name can contain "$")
   jr  z,fast_next_row
   ld  (de),a
   inc hl
@@ -750,7 +743,7 @@ wide_name_done:
   djnz  wide_col
 wide_row_full:
   ld  hl,(wide_row_end)
-  ld  (hl),"$"
+  ld  (hl),0	;end of the line (a file name can contain "$")
   call  end_print_line
   jp  wide_row
 
@@ -847,7 +840,28 @@ ws_i: dw  0
 ws_limit: dw  0
 ws_key: dw  0
 
-dir_TXT:  db "  <dir>    ","$"
+
+;Prints line_file_2_PRINT (ended by 0) with BDOS, character by character, and a CR/LF.
+;BDOS function 9 can't be used: it stops at the first "$" and a file name can contain one.
+print_line_BDOS:
+  ld  hl,line_file_2_PRINT
+print_line_BDOS_loop:
+  ld  a,(hl)
+  or  a
+  jr  z,print_line_BDOS_end
+  ld  e,a
+  ld  c,2
+  push  hl
+  call  BDOS
+  pop hl
+  inc hl
+  jr  print_line_BDOS_loop
+print_line_BDOS_end:
+  ld  de,end_1RET_TXT
+  ld  c,9
+  jp  BDOS
+
+dir_TXT:  db "  <dir>    ",0
 ;----------------------------------------------------------------------------------------
 
 Parameters:
@@ -2101,7 +2115,7 @@ end_unicode_part:
 
 
   ex  de,hl
-  ld  (hl),"$"
+  ld  (hl),0	;end of the line (a file name can contain "$")
 
   xor a ;encontrado
   jp RETURN_UNSET
