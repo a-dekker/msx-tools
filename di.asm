@@ -84,7 +84,7 @@ Main:
   ld  de,NEXTOR_TXT
   jp  nz,Done
 
-  call  Parameters;undad, path,etc... y parametros
+  call  Parameters;undad, path,etc... and parameters
 
 
   call  INIT_values
@@ -94,7 +94,7 @@ Main:
   ld  de,search_string
   ld  c,40h
   ld  ix,FIB
-  ld  a,(atributos_a_mostrar)
+  ld  a,(attributes_to_display)
   ld  b,a
   call  BDOS
   or  a ;error??
@@ -130,11 +130,11 @@ print_JUMP:
   jp  check_next_file
 
 
-;fin de listado
-;ponemos numero de ficheros y directorios
+;end of list
+;specify the number of files and directories
 no_more_files:
 
-  ;We leave 2 spaces
+  ;leave 2 spaces
   ld  e," "
   ld  c,2
   call  BDOS
@@ -145,26 +145,25 @@ no_more_files:
   ;print the number of files
   ld  hl,(files_counter)
   call  put_decimal
-  call  imprime_cantidad_en_pantalla
+  call  print_quantity_on_screen
 
-  ;We print the files
+  ;Print the files
   ld  de,files_TXT
   ld  c,9
   call  BDOS
 
 
-
-  ;We print a number of directories.
+  ;Print the number of directories
   ld  hl,(dirs_counter)
   call  put_decimal
-  call  imprime_cantidad_en_pantalla
+  call  print_quantity_on_screen
 
-  ;imprimimos files
+  ;print the files
   ld  de,dirs_TXT
   ld  c,9
   call  BDOS
-;fin OK
-  rst 0 ;vuelve al DOS correctamente
+;end OK
+  rst 0 ;returns to DOS correctly
   ;ret
 ;-----------------------------------------------------
 put_decimal:
@@ -174,7 +173,7 @@ put_decimal:
 ;example: hl=300 outputs '00300'
 ;destroys: af, bc, hl, de used
 
-  ld  de,cantidad_valor_TXT
+  ld  de,quantity_value_TXT
 
 Num2Dec ld  bc,-10000
   call  Num1
@@ -196,16 +195,16 @@ Num2  inc a
   inc de
   ret
 
-imprime_cantidad_en_pantalla:
+print_quantity_on_screen:
 
-  ld  de,cantidad_valor_TXT-1
-next_cantidad_to_print:
+  ld  de,quantity_value_TXT-1
+next_quantity_to_print:
   inc de
   ld  a,(de)
   cp  "$"
   jr  z,cantidad_cero
   cp  030h
-  jr  z,next_cantidad_to_print
+  jr  z,next_quantity_to_print
 imprime_cantidad_DOS:
   ld  c,9
   call  BDOS
@@ -217,7 +216,7 @@ cantidad_cero:
 
 
 
-cantidad_valor_TXT: ds  7,"$"
+quantity_value_TXT: ds  7,"$"
 
 
 
@@ -334,7 +333,7 @@ no_PUT_DIRECTORY:
   ;HL:pointer to 32 bits number
   ;BC:pointer to output buffer
   ld  hl,line_file_2_PRINT+27
-  ld  (hl),0	;end of the line (a file name can contain "$")
+  ld  (hl),0 ;end of the line (a file name can contain "$")
 
 check_LFN:
   ;check if screen width is greater than 35
@@ -743,7 +742,7 @@ wide_name_done:
   djnz  wide_col
 wide_row_full:
   ld  hl,(wide_row_end)
-  ld  (hl),0	;end of the line (a file name can contain "$")
+  ld  (hl),0 ;end of the line (a file name can contain "$")
   call  end_print_line
   jp  wide_row
 
@@ -872,7 +871,7 @@ Parameters:
   jp  z,ver_todo    ; Jump if no parameter
 
 
-  ld  hl,(DMA)  ; Esto pone un 255 al final de la entrada de parámetros. Necesario para los MSX1.
+  ld  hl,(DMA)  ; This places a 255 at the end of the parameter entry. Necessary for MSX1 systems.
   ld  h,0
   ld  bc,DMA +1
   add hl,bc
@@ -880,40 +879,40 @@ Parameters:
 
 
 
-;Mostrar solo ficheros (s)
+;Show files only
 
   ld  hl,DMA
   ld  b,(HL)
-  ld  c,"S"   ; Mostrar ficheros sistema
+  ld  c,"S"   ; Show system files
   call  SeekParameter
   cp  255
   jp  z,Done    ; Jump if syntax error
   or  a
   jr  z,no_S
-  ld  a,(atributos_a_mostrar)
-  set 2,a ; mostrar ficheros sistema
-  ld  (atributos_a_mostrar),a
+  ld  a,(attributes_to_display)
+  set 2,a ; show system files
+  ld  (attributes_to_display),a
 ;------------------------------
-;Mostrar solo lectura (h)
+;Show read-only (h)
 no_S:
 
   ld  hl,DMA
   ld  b,(HL)
-  ld  c,"F"   ; Mostrar solo ficheros
+  ld  c,"F"   ; Show files only
   call  SeekParameter
   cp  255
   jp  z,Done    ; Jump if syntax error
   or  a
   jr  z,no_F
-  ld  a,(atributos_a_mostrar)
-  res 4,a ; quitamos que se vean subdirectorios
-  ld  (atributos_a_mostrar),a
+  ld  a,(attributes_to_display)
+  res 4,a ; remove the visibility of subdirectories
+  ld  (attributes_to_display),a
 ;------------------------------
 
 no_F:
   ld  hl,DMA
   ld  b,(HL)
-  ld  c,"P"   ; No pausar
+  ld  c,"P"   ; No pause
   call  SeekParameter
   cp  255
   jp  z,Done    ; Jump if syntax error
@@ -926,18 +925,18 @@ no_F:
 no_P:
 
 
-;Mostrar solo lectura (h)
+;Show read-only (h)
   ld  hl,DMA
   ld  b,(HL)
-  ld  c,"H"   ; mostrar solo lectura
+  ld  c,"H"   ; show read-only
   call  SeekParameter
   cp  255
   jp  z,Done    ; Jump if syntax error
   or  a
   jr  z,no_H
-  ld  a,(atributos_a_mostrar)
-  set 1,a ; activamos que se vean ocultos
-  ld  (atributos_a_mostrar),a
+  ld  a,(attributes_to_display)
+  set 1,a ; enable the display of hidden items
+  ld  (attributes_to_display),a
 no_H:
   ld  hl,DMA
   ld  b,(HL)
@@ -1068,10 +1067,10 @@ posicion_ultima_path_TXT: ld  hl,0000 ;self!!
 ;
 ;     Parameters:    C = 40H (_FFIRST)
 ;                   DE = Drive/path/file ASCIIZ string
-;                                or fileinfo block pointer
-;                        HL = filename ASCIIZ string (only if
-;                                DE = fileinfo pointer)
-;                         B = Search attributes
+;                        or fileinfo block pointer
+;                   HL = filename ASCIIZ string (only if
+;                   DE = fileinfo pointer)
+;                   B  = Search attributes
 ;                   IX = Pointer to new fileinfo block
 ;     Results:       A = Error
 ;                 (IX) = Filled in with matching entry
@@ -1079,24 +1078,23 @@ posicion_ultima_path_TXT: ld  hl,0000 ;self!!
   ld  a,0
   ld  (root_directory_no_check_cluster+1),a
 
-  ld  a,(sectors_per_cluster) ;inicializa contador sectores en cluster
+  ld  a,(sectors_per_cluster) ;initialize sector counter within cluster
   ld  (sectors_left_in_cluster),a
 
 
-  ;ld c,01Ah ;set buffer disk transfer para sectores directorio
+  ;ld c,01Ah ;set buffer disk transfer directory for sectors
   ;ld de,buffer_disk
   ;call BDOS
 
 
   ld  hl,(path_FIB+19)  ;first cluster of directory
-  ld  (cluster_p),hl  ;guardamos primer cluster del directorio
+  ld  (cluster_p),hl  ;save the first cluster of the directory.
   ;hl=cluster number
   call  cluster2sector
   ;out hl,a
 
 
   ex  de,hl
-
 
 
 
@@ -1119,7 +1117,7 @@ next_value_DMA:
   inc hl
   ld  a,(hl)
   cp  0FFh
-  ret z ;fin DMA? entonces vuelve
+  ret z ;;end of DMA? then come back
 
   cp  20h
   jr  z,next_value_DMA
@@ -1143,11 +1141,11 @@ error_TXT:  ds  64
 
 
 error_exit:
-  ;coge numero de error en B
+  ;Take error number in B
   ld  c,65h
   call  BDOS
 
-  ;coge texto error
+  ;capture error text
   ld  de,error_TXT
   ld  c,66h
   call  BDOS
@@ -1216,16 +1214,16 @@ write_directory_TEXT:
 
   ld  (hl),"$"
 
-  ;comprueba root
+  ;check for root
   and a
-  sbc hl,de ;iguales ->root directory
+  sbc hl,de ;equal ->root directory
   ld  a,0
   jr  nz,no_in_ROOT_directory
   ld  a,1
 
 no_in_ROOT_directory:
 
-  ld  (root_directory_to_check+1),a;decimos que es ROOT o no
+  ld  (root_directory_to_check+1),a;say it¿s ROOT or not
 
   ld  a,(DRIVE_to_DIR)
   add a,40h ;A, B,C...
@@ -1236,9 +1234,7 @@ no_in_ROOT_directory:
   ld  (WHOLE_PATH_STRING+2),a
 
 
-  ;conseguimos FIB del directorio
-
-
+  ;obtain the FIB from the directory.
 
 
   ld  de,Directory_TXT
@@ -1265,11 +1261,11 @@ no_in_ROOT_directory:
   ret
 ;-------------------------------
 Done:
-;IN:  de,texto salida
-  ei        ; Activa interrupciones. Por si acaso se han quedado desactivadas.
+;IN:  de,output text
+  ei        ; Enable interrupts. Just in case they¿ve ended up disabled.
 
   ld  c,9
-  call  BDOS      ; Imprime el mensaje de error.
+  call  BDOS      ; Print the error message.
   rst 0
 ;----------------------------------------------
 DEC_lines_printed:
@@ -1277,7 +1273,6 @@ DEC_lines_printed:
     ld  a,(no_wait_key)
     or  a
     ret nz
-
 
 
     ld  a,(lines_left)
@@ -1296,7 +1291,7 @@ DEC_lines_printed:
     ld  hl,(LOCATE)
     push  hl
 
-    ld  c,8;espera una tecla
+    ld  c,8;wait for a key press
     call  BDOS
 
     pop hl
@@ -1318,7 +1313,6 @@ more_BS:  ld  e,07Fh  ;BS!! Delete backwards!!
     ;call CHPUT
 
 
-
     ret
 
 
@@ -1335,20 +1329,20 @@ RESET_LINES:
     ld  (lines_left),a
     ret
 ;---------------------------------------------------------------------------
-;--- NOMBRE: CHKDOS2
-;      Obtiene la version de MSX-DOS
-;    ENTRADA:   -
-;    SALIDA:    A=Version 1, 2
-;    REGISTROS: F
-;    LLAMADAS:  -
+;--- NAME: CHKDOS2
+;      Gets the MSX-DOS version
+;    ENTRANCE:   -
+;    EXIT:    A=Version 1, 2
+;    REGISTERS: F
+;    CALLS:  -
 ;    VARIABLES: -
 
 CHKDOS2:
 
 
-    ;Comprueba la version del DOS
+    ;Check the DOS version
 
-  ;doscall  _DOSVER ;y establece DV.
+  ;doscall  _DOSVER ;and sets DV.
   ld  c,06Fh;check DOS version
   call  BDOS
   or  a
@@ -1360,7 +1354,7 @@ CHKDOS2:
   jp  c,CD2END
 
   ;DOS2 or NEXTOR
-  ;comprueba si es Nextor!!
+  ;Check if it¿s Nextor!!
   ld  c,06Fh;DOS version
   ld  B,05Ah
   ld  HL,1234h
@@ -1370,7 +1364,7 @@ CHKDOS2:
 
   push  IX
   POP HL
-  ld  a,H;diferente de 0 ->Nextor
+  ld  a,H;different from 0 ->Nextor
   or  a
   ld  a,2
   jp  z,CD2END
@@ -1416,9 +1410,9 @@ output_set:
 
   ;reset pointer search filename
   ld  hl,buffer_directory+512
-  ld  (puntero_busqueda_HL),HL
-  ld  a,16;entradas en 1 sector
-  ld  (entradas_pendientes_busqueda),a
+  ld  (HL_search_pointer),HL
+  ld  a,16;tickets in 1 sector
+  ld  (pending_entries_search),a
 
 
   call  RESET_LINES
@@ -1427,23 +1421,23 @@ output_set:
   ld  l,a
   ld  h,0
 
-  ld  de,27 ;nombre archivo+tamaño+...
-  and a ;quitamos carry
+  ld  de,27 ;file name + size + ...
+  and a ;remove carry
   sbc hl,de
 
   ld  (long_LFN_to_write+1),hl
 
 
-  ld  a,(lines_left);por el Directory of
+  ld  a,(lines_left);by the Directory of
   dec a
   dec a
   ld  (lines_left),a
   ret
 
 ;--------------------------------------------------------------------------------------------
-Long_File_Name: ;solo en Nextor
+Long_File_Name: ;only on Nextor
 
-  ld  de,FIB+1;nombre fichero ASCIIZ
+  ld  de,FIB+1;ASCIIZ filename
   ld  hl,filename_to_check
   ld  c,5Ch;parse filename
   call  BDOS
@@ -1557,7 +1551,7 @@ Long_File_Name: ;solo en Nextor
 ;------------------------------------------------------------------------------------
 
   ;xor  a
-  ;ld (fin_primera_busqueda),a
+  ;ld (end_of_first_search),a
   ;call read_2_sectors_directory
 search_filename_directory_loop:
 
@@ -1568,37 +1562,37 @@ search_filename_directory_loop:
   or  a ;encontrado
   jp  z,file_found_in_directory
 
-  cp  fin_trozo ;error
+  cp  end_segment ;error
   jp  nz,RETURN_SET
 
   ;ld a,1
-  ;ld (fin_primera_busqueda),a
+  ;ld (end_of_first_search),a
 
   ;reset pointer search filename
   ld  hl,buffer_directory+512
-  ld  (puntero_busqueda_HL),HL
-  ld  a,16;entradas en 1 sector
-  ld  (entradas_pendientes_busqueda),a
+  ld  (HL_search_pointer),HL
+  ld  a,16;tickets in 1 sector
+  ld  (pending_entries_search),a
 
   call  INC_sectors_directory
-  jp  c,RETURN_SET;fin directorio
+  jp  c,RETURN_SET;end of directory
 
-  ;error vuelve con carry
-  call  read_2_sectors_directory;lee otro sector
+  ;Error returns with Carry
+  call  read_2_sectors_directory;read another sector
   jr  search_filename_directory_loop
 file_found_in_directory:
   ld  a,1
   ld  (LFN_exists),a
   ret
 
-fin_primera_busqueda: db  0
-fin_trozo equ 1 ;termina busqueda en bloque leido
-error_fin_directorio equ 2  ;no encontrado en todo el directorio
-error_no_LFN_en_entrada equ 3
+end_of_first_search: db  0
+end_segment equ 1 ;search ends at the block that has been read
+end_of_directory_error equ 2  ;not found anywhere in the directory
+error_no_LFN_in_entry equ 3
 ;-----------------------------------------------------------------------------------
 read_2_sectors_directory:
 
-  ;copiamos sector leido antes del otro
+  ;copy the sector read previously from the other one.
   ld  hl,buffer_directory+200h
   ld  de,buffer_directory
   ld  bc,0200h
@@ -1620,7 +1614,7 @@ read_PHY_sector_sub:
   ld  b,a
 
 
-  and a;quitamos carry
+  and a;remove carry
   ld  hl,(first_sector_drive_PHY)
   add hl,de
   ld  a,(first_sector_drive_PHY+2)
@@ -1629,10 +1623,9 @@ read_PHY_sector_sub:
 no_INC_3_byte_PHY:
   add a,b
 
-  ;ponemos sector fisico en tabla antes de llamar
+  ;include the physical sector in the table before calling.
   ld  (sector_to_read),hl
   ld  (sector_to_read+2),a
-
 
 
 
@@ -1650,7 +1643,7 @@ no_INC_3_byte_PHY:
   ld  de,04160h; DRV_DSKIO
   ld  b,0FFh
   ld  c,07Bh;routine in device driver
-  ld  hl,tabla_registros
+  ld  hl,records_table
   call  BDOS
   ret
 
@@ -1671,15 +1664,15 @@ read_sector_no_NEXTOR:
   ld  h,0
   ld  l,a
 
-  ld  a,(DRIVE_to_DIR);unidad +1
+  ld  a,(DRIVE_to_DIR);unit +1
   dec a
 
-  ld  b,1 ;numero de sectores
+  ld  b,1 ;number of sectors
   ld  c,073h
-  call  BDOS  ;distinto sector?-> lee
+  call  BDOS  ;distinct sector?-> read
   ret
 
-tabla_registros:
+records_table:
     db  028h    ;F
 Drive_unit: db  00;self!! ;A
     db  1h;self!! ;C
@@ -1702,13 +1695,13 @@ root_directory_no_check_cluster:  ld  a,00  ;self!!
   ld  a,(sectors_left_in_cluster)
   dec a
   ld  (sectors_left_in_cluster),a
-  or  a ;fin cluster??
+  or  a ;end of cluster??
   jr  nz,no_end_cluster
 
   ld  hl,(cluster_p)
   call  read_FAT_cluster  ;hl:cluster number
   ld  (cluster_p),hl
-  ret c;fin directorio!!
+  ret c;End of directory!!
 
   ;hl=cluster number
   call  cluster2sector
@@ -1737,48 +1730,48 @@ no_INC_3byte_1:
   ld  (actual_sector_directory),de
   ld  (actual_sector_directory+2),a
 
-  and a ;quita carry
+  and a ;remove carry
   ret
 
-entradas_pendientes_busqueda: db  0
-puntero_busqueda_HL:    dw  0
+pending_entries_search: db  0
+HL_search_pointer:    dw  0
 sectors_left_in_cluster:  db  0
 ;-----------------------------------------------------------------------
 search_filename_in_directory:
 ;IN:
-; filename2PRINT  :nombre fichero CACAXX~1.ROM +0
-;OUT: a=0 Encontrado
-; a=fin_trozo no encontrado en bloque leido
-; a>fin trozo -> no encontrado
+; filename2PRINT  :filename CACAXX~1.ROM +0
+;OUT: a=0 Found
+; a=end_segment not found in the block read
+; end of segment -> not found
 ;
-; LFN : nombre largo del fichero, ASCIIZ
+; LFN : long filename, ASCIIZ
 
 
-  ;ld a,(fin_primera_busqueda)
+  ;ld a,(end_of_first_search)
   ;or a
   ;ld hl,buffer_directory
   ;ld a,16*2;entradas en 2 sectores
-  ;jr z,no_primera_busqueda
-  ld  hl,(puntero_busqueda_HL)
-  ld  a,(entradas_pendientes_busqueda)
-;no_primera_busqueda:
+  ;jr z,not_first_search
+  ld  hl,(HL_search_pointer)
+  ld  a,(pending_entries_search)
+;not_first_search:
   jr  first_check_filename
-loop_busqueda_entrada_directorio:
-  ld  (entradas_pendientes_busqueda),a
-  ld  (puntero_busqueda_HL),HL
+directory_entry_search_loop:
+  ld  (pending_entries_search),a
+  ld  (HL_search_pointer),HL
 
   ld  a,(hl)
   or  a
-  jp  z,findirectorio
+  jp  z,findirectory
 first_check_filename:
-  ld  b,11;nombre
+  ld  b,11;name
   ld  de,filename_to_check
 
 
 check_name:
 ;IN:  HL directorio buffer
 ; DE filename
-; B numero caracteres a comprobar
+; B number of characters to check
   ld  a,(de)
   cp  (hl)
   jp  nz,not_match_filename
@@ -1788,33 +1781,30 @@ check_name:
 
 
 
-  ;encontrado!!!
+  ;found!!!
 
 
-  ld  HL,(puntero_busqueda_HL)
+  ld  HL,(HL_search_pointer)
   jp  read_LFN_backwards
 
 
 not_match_filename:
-  ld  HL,(puntero_busqueda_HL)
+  ld  HL,(HL_search_pointer)
   ld  bc,20h
   add hl,bc
 
 
 
-
-
-
-  ld  a,(entradas_pendientes_busqueda)
+  ld  a,(pending_entries_search)
   dec a
-  jp  nz,loop_busqueda_entrada_directorio
+  jp  nz,directory_entry_search_loop
 
 
-  ld  a,fin_trozo
+  ld  a,end_segment
   ret
 
-findirectorio:
-  ld  a,error_fin_directorio
+findirectory:
+  ld  a,end_of_directory_error
   ret
 
 ;----------------------------------------------------
@@ -1869,16 +1859,14 @@ read_FAT_cluster:
 
 
 
+  ex  de,hl ;lower part of the unit
 
-  ex  de,hl ;parte baja de la unidad
 
-
-  ;comprobar mismo sector
+  ;check the same sector
   ld  hl,(actual_sector_FAT)
   or  a ;quit carry
   sbc hl,de
   jp  z,readed_FAT_sector;same sector
-
 
 
 
@@ -1906,9 +1894,9 @@ read_FAT_sector_no_NEXTOR:
 
 
   ld  a,b
-  ld  b,1;cantidad de sectores
+  ld  b,1 ;number of sectors
   ld  c,073h
-  call  BDOS  ;distinto sector?-> lee
+  call  BDOS  ;different sector?-> read
 
 
 ;Read absolute sectors from drive (_RDDRV, 73h)
@@ -1964,9 +1952,9 @@ read_FAT_cluster_F12:
 
   push  hl  ;guarda numero de cluster
 
-  ld  a,(FAT12_leida)
+  ld  a,(FAT12_read)
   or  a
-  jp  nz,FAT_ya_leida
+  jp  nz,FAT_already_read
 
   ld  c,01Ah ;set buffer disk transfer
   ld  de,buffer_FAT12
@@ -1989,11 +1977,11 @@ read_FAT_cluster_F12:
 
 
   ld  a,1
-  ld  (FAT12_leida),a
+  ld  (FAT12_read),a
 
-FAT_ya_leida:
+FAT_already_read:
 
-  pop hl  ;recupera numero de cluster
+  pop hl  ;retrieve cluster number
 
   ld  de,buffer_FAT12; pointer to FAT buffer of drive
 
@@ -2053,14 +2041,14 @@ A421A:  ld  l,a
   ret
 
 
-FAT12_leida:  db  0
+FAT12_read:  db  0
 ;-------------------------------------------------------------
-;buffer_directory (2 sectores)->1024 bytes
-;filename nombre del fichero con .!!!
+;buffer_directory (2 sectors)->1024 bytes
+;filename, including the .!!! extension
 read_LFN_backwards:
-;IN:  HL:puntero nombre fichero corto.
-;OUT  A=0:encontrado
-  ;LFN->nombre largo del fichero+$!!!
+;IN:  HL:pointer to short filename.
+;OUT  A=0:found
+  ;SLFN->long filename+$!!!
 
   ld  bc,-20h ;restamos 20
   add hl,bc
@@ -2072,7 +2060,7 @@ read_LFN_backwards:
 
   ld  a,(ix+11)
   cp  0Fh
-  ld  a,error_no_LFN_en_entrada;no tiene LFN
+  ld  a,error_no_LFN_in_entry;it does not have LFN
   jp  nz,RETURN_UNSET
 
   ld  de,LFN
@@ -2108,16 +2096,16 @@ end_unicode_part:
 
   ;
   bit 6,(hl)
-  ld  bc,-20h ;restamos 20
+  ld  bc,-20h ;substract 20
   add hl,bc
   jr  z,loop_print_1_entry_LFN
 
 
 
   ex  de,hl
-  ld  (hl),0	;end of the line (a file name can contain "$")
+  ld  (hl),0 ;end of the line (a file name can contain "$")
 
-  xor a ;encontrado
+  xor a ;found
   jp RETURN_UNSET
 
 
@@ -2156,7 +2144,7 @@ take_File_Info_Block:
   ld  de,0
   ld  (actual_sector_FAT),de
 
-  ;crea File Info Block
+  ;create File Info Block
   ld  de,filename_to_check
   ld  c,40h ;Find First Entry
   ld  ix,file_info_block
@@ -2173,7 +2161,7 @@ take_File_Info_Block:
   ldir
   inc hl
   ;inc  de
-  ld  bc,3;quitamos "."
+  ld  bc,3;remove "."
   ldir
   ret
 ;-------------------------------------------
@@ -2186,17 +2174,17 @@ take_drive_INFO:
   ld  c,079h  ;drive info
   call  BDOS
 
-  ld  a,(Drive_info+4);valores para leer sectores
+  ld  a,(Drive_info+4);stocks for analyzing sectors
   ld  (Drive_unit),a
   ;
-  ;TODO Comprueba si es el slot Flashjack DISKROM!!
+  ;TODO Check if it's the Flashjack DISKROM slot!!
   ;
   ;ld hl,Drive_info+1
   ;ld a,(ERMSlt)
   ;cp (hl)
   ;jp nz,no_slot_FLASHJACKS
 
-  ;guarda primer sector FISICO de la unidad
+  ;saves the first PHYSICAL sector of the drive
   ld  ix,Drive_info
   ld  a,(ix+6)
   ld  (first_sector_drive_PHY),a
@@ -2236,7 +2224,7 @@ take_drive_INFO:
   ld  a,(ix+16)
   ld  (first_sector_DATA+1),a
 
-  ;calcula primer sector fisico de la FAT
+  ;calculate the first physical sector of the FAT
   ld  hl,(first_sector_drive_PHY)
   ld  a,(first_sector_drive_PHY+2)
   ld  de,(first_sector_DATA)
@@ -2289,7 +2277,6 @@ no_inc_5byte_sector:
   ld  c,a
   ld  a,b
   add c
-
 
 
 
@@ -2426,7 +2413,6 @@ sub_32_loop:    ld      a,(de)
 ;------------------------------------------------------------
 
 
-
 DOS_VERSION:
   db  0
 no_wait_key:  db  0
@@ -2452,7 +2438,7 @@ filename2PRINT: ds 13
 LFN:  ds  256
 sectors_per_cluster:  db  0
 
-atributos_a_mostrar:  db  010001b;por defecto con subdirectorios y read only
+attributes_to_display:  db  010001b;by default with subdirectories and read-only
 
 first_cluster_file: db  0,0
 first_sector_file:  db  0,0,0
@@ -2475,7 +2461,7 @@ fn_last_item  dw  0
 
 path_file db  92
     ds  256
-filename: ds  12 ;ASCIIZ lleva .!!!
+filename: ds  12 ;ASCIIZ carry .!!!
 path_FIB: ds  64
 
 Device_drive_Info:  ds  64
@@ -2526,7 +2512,7 @@ Drive_parameters: ds  32
 ;1: FAT16
 ;255: Other
 
-buffer_directory: equ 08000h;ds 1024,020h ;2 sectores
+buffer_directory: equ 08000h;ds 1024,020h ;2 sectors
 
 
 
@@ -2536,5 +2522,5 @@ buffer_FAT12:
 screen_buffer:  equ buffer_FAT12+24*512 ;RAM mirror of the screen (24 rows x 80)
 
 
-; Fin del programa
+; End of program
 end
